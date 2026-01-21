@@ -103,8 +103,23 @@ const client = createClient({
                 console.log(`Environment ${ENVIRONMENT_ID} is ready.`);
 
             } catch (createErr) {
-                console.error("Error creating environment:", createErr);
-                throw createErr;
+                // Check for QuotaReached (403)
+                if (
+                    createErr.name === 'QuotaReached' ||
+                    (createErr.message && createErr.message.includes('Quota reached')) ||
+                    (createErr.status === 403 && createErr.message && createErr.message.includes('environments'))
+                ) {
+                    console.warn("======================================================");
+                    console.warn("WARNING: Environment quota reached!");
+                    console.warn("Falling back to using the existing 'master' environment.");
+                    console.warn("This means we are NOT using immutable environments.");
+                    console.warn("======================================================");
+                    ENVIRONMENT_ID = 'master';
+                    environment = await space.getEnvironment('master');
+                } else {
+                    console.error("Error creating environment:", createErr);
+                    throw createErr;
+                }
             }
         }
 
@@ -286,9 +301,13 @@ const client = createClient({
             try {
                 // getEnvironmentAlias needs space context
                 const environmentAlias = await space.getEnvironmentAlias(ENVIRONMENT_INPUT);
-                environmentAlias.environment.sys.id = ENVIRONMENT_ID;
-                await environmentAlias.update();
-                console.log(`Alias ${ENVIRONMENT_INPUT} updated to ${ENVIRONMENT_ID}.`);
+                if (environmentAlias.environment.sys.id !== ENVIRONMENT_ID) {
+                    environmentAlias.environment.sys.id = ENVIRONMENT_ID;
+                    await environmentAlias.update();
+                    console.log(`Alias ${ENVIRONMENT_INPUT} updated to ${ENVIRONMENT_ID}.`);
+                } else {
+                    console.log(`Alias ${ENVIRONMENT_INPUT} already points to ${ENVIRONMENT_ID}. Skipping update.`);
+                }
 
                 // Cleanup Old Environments?
                 // Not in tutorial, but needed for production grade.
