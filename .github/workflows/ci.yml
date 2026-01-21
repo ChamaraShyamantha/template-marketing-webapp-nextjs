@@ -16,6 +16,7 @@ jobs:
       CONTENTFUL_ACCESS_TOKEN: ${{ secrets.CONTENTFUL_DELIVERY_TOKEN }} # Mapping Delivery Token to Access Token expected by code
       CONTENTFUL_PREVIEW_ACCESS_TOKEN: ${{ secrets.CONTENTFUL_PREVIEW_TOKEN }} # Required by client.ts
       CONTENTFUL_PREVIEW_SECRET: ${{ secrets.CONTENTFUL_PREVIEW_SECRET }} # Good practice to include
+      NEXT_PUBLIC_BASE_URL: "https://example.com" # Required for metadataBase URL construction during build
 
     steps:
       - name: Checkout code
