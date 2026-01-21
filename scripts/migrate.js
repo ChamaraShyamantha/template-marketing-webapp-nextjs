@@ -43,13 +43,10 @@ const client = createClient({
         let ENVIRONMENT_ID = "";
 
         // Check if we are checking into these branches
-        // We treat 'main' and 'master' as production aliases
-        if (
-            ENVIRONMENT_INPUT === "master" ||
-            ENVIRONMENT_INPUT === "main" ||
-            ENVIRONMENT_INPUT === "staging" ||
-            ENVIRONMENT_INPUT === "qa"
-        ) {
+        // We treat 'main', 'master', 'staging, 'stg', 'qa' as production aliases
+        // If the ENVIRONMENT_INPUT matches any of these, we do the Alias Rotation (Blue/Green) flow.
+        const PROD_ALIASES = ["master", "main", "staging", "stg", "qa"];
+        if (PROD_ALIASES.includes(ENVIRONMENT_INPUT)) {
             console.log(`Running on ${ENVIRONMENT_INPUT}.`);
             console.log(`Updating ${ENVIRONMENT_INPUT} alias.`);
             ENVIRONMENT_ID = `${ENVIRONMENT_INPUT}-${getStringDate()}`;
@@ -291,12 +288,7 @@ const client = createClient({
         // ---------------------------------------------------------------------------
         // Step 6: Update Alias (if applicable)
         // ---------------------------------------------------------------------------
-        if (
-            ENVIRONMENT_INPUT === "master" ||
-            ENVIRONMENT_INPUT === "main" ||
-            ENVIRONMENT_INPUT === "staging" ||
-            ENVIRONMENT_INPUT === "qa"
-        ) {
+        if (PROD_ALIASES.includes(ENVIRONMENT_INPUT)) {
             console.log(`Updating ${ENVIRONMENT_INPUT} alias.`);
             try {
                 // getEnvironmentAlias needs space context

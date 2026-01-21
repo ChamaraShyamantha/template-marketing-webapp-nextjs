@@ -6,6 +6,16 @@ on:
   pull_request:
     branches: ["master"]
   workflow_dispatch:
+    inputs:
+      alias:
+        description: "Target Environment Alias (master, qa, stg)"
+        required: true
+        default: "master"
+        type: choice
+        options:
+          - master
+          - qa
+          - stg
 
 jobs:
   build-and-deploy:
@@ -34,12 +44,15 @@ jobs:
       - name: Determine Environment Name
         id: env-name
         run: |
-          if [ "${{ github.ref }}" == "refs/heads/master" ]; then
-            echo "ENVIRONMENT_INPUT=master" >> $GITHUB_OUTPUT
+          # Priority: 1. Manual Input 2. Master Branch 3. Feature Branch
+          if [ "${{ github.event_name }}" == "workflow_dispatch" ]; then
+             echo "ENVIRONMENT_INPUT=${{ inputs.alias }}" >> $GITHUB_OUTPUT
+          elif [ "${{ github.ref }}" == "refs/heads/master" ]; then
+             echo "ENVIRONMENT_INPUT=master" >> $GITHUB_OUTPUT
           else
-            # Use branch name for feature branches, replace slashes with dashes
-            SAFE_BRANCH_NAME=$(echo "${{ github.head_ref || github.ref_name }}" | sed 's/\//-/g')
-            echo "ENVIRONMENT_INPUT=${SAFE_BRANCH_NAME}" >> $GITHUB_OUTPUT
+             # Use branch name for feature branches, replace slashes with dashes
+             SAFE_BRANCH_NAME=$(echo "${{ github.head_ref || github.ref_name }}" | sed 's/\//-/g')
+             echo "ENVIRONMENT_INPUT=${SAFE_BRANCH_NAME}" >> $GITHUB_OUTPUT
           fi
 
       - name: Run Contentful Migrations & Environment Setup
