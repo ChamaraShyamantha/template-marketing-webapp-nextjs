@@ -2,9 +2,10 @@ name: Contentful CI/CD
 
 on:
   push:
-    branches: [ "main" ]
+    branches: ["master"]
   pull_request:
-    branches: [ "main" ]
+    branches: ["master"]
+  workflow_dispatch:
 
 jobs:
   build-and-deploy:
@@ -13,7 +14,7 @@ jobs:
       CONTENTFUL_SPACE_ID: ${{ secrets.CONTENTFUL_SPACE_ID }}
       CONTENTFUL_MANAGEMENT_TOKEN: ${{ secrets.CONTENTFUL_MANAGEMENT_TOKEN }}
       CONTENTFUL_DELIVERY_TOKEN: ${{ secrets.CONTENTFUL_DELIVERY_TOKEN }} # Optional if needed for tests
-      
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -21,8 +22,8 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v3
         with:
-          node-version: '18'
-          cache: 'npm'
+          node-version: "18"
+          cache: "npm"
 
       - name: Install Dependencies
         run: npm ci
@@ -30,8 +31,8 @@ jobs:
       - name: Determine Environment Name
         id: env-name
         run: |
-          if [ "${{ github.ref }}" == "refs/heads/main" ]; then
-            echo "ENVIRONMENT_INPUT=main" >> $GITHUB_OUTPUT
+          if [ "${{ github.ref }}" == "refs/heads/master" ]; then
+            echo "ENVIRONMENT_INPUT=master" >> $GITHUB_OUTPUT
           else
             # Use branch name for feature branches, replace slashes with dashes
             SAFE_BRANCH_NAME=$(echo "${{ github.head_ref || github.ref_name }}" | sed 's/\//-/g')
@@ -40,10 +41,10 @@ jobs:
 
       - name: Run Contentful Migrations & Environment Setup
         env:
-            ENVIRONMENT_INPUT: ${{ steps.env-name.outputs.ENVIRONMENT_INPUT }}
+          ENVIRONMENT_INPUT: ${{ steps.env-name.outputs.ENVIRONMENT_INPUT }}
         run: |
-            echo "Deploying to environment/alias: $ENVIRONMENT_INPUT"
-            node scripts/migrate.js "$CONTENTFUL_SPACE_ID" "$ENVIRONMENT_INPUT" "$CONTENTFUL_MANAGEMENT_TOKEN"
+          echo "Deploying to environment/alias: $ENVIRONMENT_INPUT"
+          node scripts/migrate.js "$CONTENTFUL_SPACE_ID" "$ENVIRONMENT_INPUT" "$CONTENTFUL_MANAGEMENT_TOKEN"
 
       - name: Run Tests
         # Ensure tests run against the correct environment.
@@ -58,7 +59,7 @@ jobs:
         # Wait, the tutorial creates a new env "CI_$CIRCLE_BRANCH".
         # Then runs tests "--environment-id".
         # Then Deploy: "Creating new master environment and setting master alias".
-        
+
         # My migrate.js does EVERYTHING in one go: Create -> Migrate -> Update Alias.
         # If I want to TEST before Alias Update (Blue/Green), I should split the script or add a test hook.
         # For now, to match the "Production Grade" request within reasonable scope:
@@ -67,8 +68,8 @@ jobs:
         # Integration tests usually run against the specific ENV ID.
         # I can modify migrate.js to run a command passed to it? Or just run tests in CI against the new env?
         # But the script determines the env ID dynamically (timestamp).
-        
+
         # Simpler approach:
-        # Just run lint and build for now to ensure code integrity. 
+        # Just run lint and build for now to ensure code integrity.
         # Integration tests against the actual contentful env require knowing the env ID.
         run: npm run build

@@ -83,7 +83,7 @@ const client = createClient({
             try {
                 environment = await space.createEnvironmentWithId(ENVIRONMENT_ID, {
                     name: ENVIRONMENT_ID,
-                    // cloneFrom: { sys: { type: 'Link', linkType: 'Environment', id: 'master' } } // Optional: specify source
+                    cloneFrom: { sys: { type: 'Link', linkType: 'Environment', id: 'master' } }
                 });
                 console.log(`Environment ${ENVIRONMENT_ID} created.`);
 
