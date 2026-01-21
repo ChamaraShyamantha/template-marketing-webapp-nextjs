@@ -145,6 +145,27 @@ const client = createClient({
         const locales = await environment.getLocales();
         const defaultLocale = locales.items.find((locale) => locale.default).code;
 
+        // ---------------------------------------------------------------------------
+        // Ensure Version Tracking Content Type Exists
+        // ---------------------------------------------------------------------------
+        try {
+            let versionTrackingType = await environment.getContentType("versionTracking");
+            if (!versionTrackingType.sys.publishedVersion) {
+                console.log("Publishing existing versionTracking content type...");
+                versionTrackingType = await versionTrackingType.publish();
+            }
+        } catch (e) {
+            console.log("Creating versionTracking content type...");
+            let versionTrackingType = await environment.createContentTypeWithId("versionTracking", {
+                name: "Version Tracking",
+                fields: [
+                    { id: "version", name: "Version", type: "Symbol", required: true }
+                ]
+            });
+            await versionTrackingType.publish();
+            console.log("Created and published versionTracking content type.");
+        }
+
         console.log("Read all the available migrations from the file system");
         const availableMigrations = (await readdirAsync(MIGRATIONS_DIR))
             .filter((file) => /^\d+?.+\.js$/.test(file)) // Updated regex to allow names like 01-setup.js
