@@ -83,8 +83,7 @@ const client = createClient({
             try {
                 environment = await space.createEnvironmentWithId(ENVIRONMENT_ID, {
                     name: ENVIRONMENT_ID,
-                    cloneFrom: { sys: { type: 'Link', linkType: 'Environment', id: 'master' } }
-                });
+                }, 'master');
                 console.log(`Environment ${ENVIRONMENT_ID} created.`);
 
                 // Wait for processing? createEnvironmentWithId usually waits until ready if using the plain client, 
